@@ -1,36 +1,109 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Finance Aggregator
 
-## Getting Started
+Application personnelle pour agréger vos comptes bancaires et investissements en un seul endroit.
 
-First, run the development server:
+## Fonctionnalités (MVP)
+
+- **Tableau de bord** : Vue d'ensemble de votre patrimoine, performance, allocation par classe d'actif
+- **Comptes bancaires** : Synchronisation automatique avec Banque Populaire, Revolut, et autres via Open Banking PSD2
+- **Investissements** : Portfolio PEA, CTO, Assurance Vie
+- **Historique** : Snapshots quotidiens pour suivre l'évolution de votre patrimoine
+- **Synchronisation** : Toutes les 6 heures automatiquement
+
+## Stack Technique
+
+- **Frontend** : Next.js (App Router), TypeScript, Tailwind CSS
+- **Backend** : Next.js API Routes
+- **Database** : PostgreSQL avec Prisma ORM
+- **Auth** : JWT-based authentication (single user mode)
+- **Sync** : Enable Banking (Open Banking PSD2), Bourse Direct scraper (Playwright)
+
+## Développement Local
 
 ```bash
+# Installation
+npm install
+
+# Configuration
+cp .env.example .env.local
+# Éditer .env.local avec vos paramètres
+
+# Base de données (Docker)
+docker-compose up -d
+
+# Migrations Prisma
+npx prisma generate
+npx prisma migrate dev
+
+# Lancement
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## Architecture
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+```
+Sources financières
+        ↓
+Connecteurs (Enable Banking + Bourse Direct)
+        ↓
+Normalisation
+        ↓
+PostgreSQL
+        ↓
+API backend (Next.js API routes)
+        ↓
+Dashboard Next.js
+```
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## Structure du Projet
 
-## Learn More
+```
+finance-aggregator/
+├── prisma/
+│   ├── schema.prisma      # Modèle Prisma
+│   └── migrations/        # Migrations DB
+├── src/
+│   ├── app/
+│   │   ├── api/           # API routes
+│   │   └── (pages)/       # Pages frontend
+│   ├── lib/
+│   │   ├── db/            # Prisma client
+│   │   ├── integrations/  # Connecteurs externes
+│   │   ├── normalizer/    # Normalisation des données
+│   │   └── utils/         # Utilitaires
+│   └── scripts/           # Jobs de sync
+├── docker/
+│   ├── Dockerfile
+│   └── docker-compose.yml
+├── .env.local             # Variables d'environnement
+└── package.json
+```
 
-To learn more about Next.js, take a look at the following resources:
+## Configuration Enable Banking
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+1. Créez un compte sur [Enable Banking](https://www.enablebanking.com/)
+2. Obtenez vos API credentials
+3. Configurez `ENABLE_BANKING_API_KEY` et `ENABLE_BANKING_API_SECRET` dans `.env.local`
+4. Définissez votre redirect URI : `http://localhost:3000/api/auth/enable-banking/callback`
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## Configuration Bourse Direct
 
-## Deploy on Vercel
+1. Ajoutez vos identifiants dans `.env.local` :
+   ```
+   BOURSE_DIRECT_USERNAME=votre-utilisateur
+   BOURSE_DIRECT_PASSWORD=votre-mot-de-passe
+   ```
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+## Déploiement
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+```bash
+# Build
+docker-compose build
+
+# Lancement
+docker-compose up -d
+```
+
+## License
+
+MIT

@@ -1,0 +1,416 @@
+// Prisma Schema for Personal Finance Aggregator
+// Prisma 7 compatible schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// ============================================
+// AUTHENTICATION & USERS
+// ============================================
+
+/// User account for the application
+model User {
+  id           String    @id @default(cuid())
+  email        String    @unique
+  passwordHash String    @db.Text
+  firstName    String?
+  lastName     String?
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+  lastLogin    DateTime?
+
+  connections  Connection[]
+  accounts     Account[]
+  portfolios   Portfolio[]
+  holdings     Holding[]
+  snapshots    DailySnapshot[]
+  syncJobs     SyncJob[]
+  transactions Transaction[]
+
+  @@map("users")
+}
+
+// ============================================
+// INSTITUTIONS & CONNECTIONS
+// ============================================
+
+/// Financial institution configuration
+model Institution {
+  id      String          @id @default(cuid())
+  name    String
+  slug    String          @unique
+  type    InstitutionType
+  enabled Boolean         @default(true)
+  config  Json            @db.Json
+
+  oauthClientId    String? @db.Text
+  oauthRedirectUri String? @db.Text
+  oauthScope       String? @db.Text
+  oauthAuthUrl     String? @db.Text
+  oauthTokenUrl    String? @db.Text
+
+  connections Connection[]
+  accounts    Account[]
+  portfolios  Portfolio[]
+
+  @@index([slug])
+  @@map("institutions")
+}
+
+enum InstitutionType {
+  BANK
+  BROKERAGE
+  PAYMENT
+  CRYPTO
+  OTHER
+}
+
+/// OAuth/connection state for user-institution pairs
+model Connection {
+  id            String           @id @default(cuid())
+  userId        String
+  institutionId String
+  status        ConnectionStatus
+  accessToken   String           @db.Text
+  refreshToken  String?          @db.Text
+  expiresAt     DateTime?
+  consentId     String?          @db.Text
+  lastSyncAt    DateTime?
+  nextSyncAt    DateTime?
+  error         String?          @db.Text
+  errorAt       DateTime?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user        User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  institution Institution @relation(fields: [institutionId], references: [id])
+  accounts    Account[]
+  portfolios  Portfolio[]
+
+  @@index([userId])
+  @@index([institutionId])
+  @@index([status])
+  @@map("connections")
+}
+
+enum ConnectionStatus {
+  PENDING
+  CONNECTED
+  EXPIRED
+  DISCONNECTED
+  ERROR
+}
+
+// ============================================
+// ACCOUNTS & TRANSACTIONS
+// ============================================
+
+/// Bank account or payment account
+model Account {
+  id            String @id @default(cuid())
+  connectionId  String
+  institutionId String
+  userId        String
+
+  externalId   String  @db.Text
+  externalName String? @db.Text
+
+  name             String
+  type             AccountType
+  currency         String      @default("EUR")
+  balance          Decimal     @db.Decimal
+  availableBalance Decimal?    @db.Decimal
+  IBAN             String?     @db.Text
+  BIC              String?     @db.Text
+  accountNumber    String?     @db.Text
+  maskedNumber     String?     @db.Text
+
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  closedAt  DateTime?
+
+  connection   Connection    @relation(fields: [connectionId], references: [id])
+  institution  Institution   @relation(fields: [institutionId], references: [id])
+  user         User          @relation(fields: [userId], references: [id])
+  transactions Transaction[]
+  portfolioId  String?       @unique
+  portfolio    Portfolio?    @relation(fields: [portfolioId], references: [id])
+
+  @@index([userId, institutionId])
+  @@index([connectionId])
+  @@index([externalId])
+  @@map("accounts")
+}
+
+enum AccountType {
+  CHECKING
+  SAVINGS
+  CREDIT_CARD
+  LOAN
+  PEA
+  CTO
+  LIFE_INSURANCE
+  PEA_PME
+  OTHER
+}
+
+/// Transaction record
+model Transaction {
+  id        String @id @default(cuid())
+  accountId String
+  userId    String
+
+  externalId String @db.Text
+
+  date        DateTime
+  amount      Decimal         @db.Decimal
+  currency    String          @default("EUR")
+  type        TransactionType
+  category    String?         @db.Text
+  subCategory String?         @db.Text
+  merchant    String?         @db.Text
+  description String          @db.Text
+  note        String?         @db.Text
+
+  location         String? @db.Text
+  merchantCategory String? @db.Text
+
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
+  importedAt DateTime? @default(now())
+  manual     Boolean   @default(false)
+
+  account Account @relation(fields: [accountId], references: [id])
+  user    User    @relation(fields: [userId], references: [id])
+
+  @@index([userId, accountId])
+  @@index([externalId])
+  @@index([date])
+  @@map("transactions")
+}
+
+enum TransactionType {
+  DEBIT
+  CREDIT
+  TRANSFER
+  WITHDRAWAL
+  DEPOSIT
+  PAYMENT
+  REFUND
+  FEE
+  INTEREST
+  DIVIDEND
+  OTHER
+}
+
+// ============================================
+// INVESTMENTS & PORTFOLIOS
+// ============================================
+
+/// Investment portfolio
+model Portfolio {
+  id            String  @id @default(cuid())
+  connectionId  String?
+  accountId     String?
+  userId        String
+  institutionId String
+
+  name             String
+  type             PortfolioType
+  currency         String        @default("EUR")
+  startValue       Decimal       @default(0) @db.Decimal
+  currentValue     Decimal       @default(0) @db.Decimal
+  totalGain        Decimal       @default(0) @db.Decimal
+  totalGainPercent Decimal?      @db.Decimal
+  cashBalance      Decimal       @default(0) @db.Decimal
+  cashPercent      Decimal?      @db.Decimal
+
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  closedAt  DateTime?
+
+  connection  Connection? @relation(fields: [connectionId], references: [id])
+  institution Institution @relation(fields: [institutionId], references: [id])
+  user        User        @relation(fields: [userId], references: [id])
+  holdings    Holding[]
+  account     Account?
+
+  @@index([userId])
+  @@index([connectionId])
+  @@map("portfolios")
+}
+
+enum PortfolioType {
+  PEA
+  CTO
+  PEA_PME
+  LIFE_INSURANCE
+  OTHER
+}
+
+/// Individual holding
+model Holding {
+  id          String @id @default(cuid())
+  portfolioId String
+  userId      String
+
+  externalId String  @db.Text
+  isin       String? @db.Text
+  symbol     String? @db.Text
+  cusip      String? @db.Text
+  sedol      String? @db.Text
+
+  quantity     Decimal @db.Decimal
+  averageCost  Decimal @default(0) @db.Decimal
+  currentPrice Decimal @default(0) @db.Decimal
+  currency     String  @default("EUR")
+
+  marketValue      Decimal  @default(0) @db.Decimal
+  totalGain        Decimal  @default(0) @db.Decimal
+  totalGainPercent Decimal? @db.Decimal
+
+  lastUpdated   DateTime  @default(now())
+  lastPriceSync DateTime?
+
+  portfolio Portfolio? @relation(fields: [portfolioId], references: [id])
+  user      User       @relation(fields: [userId], references: [id])
+  asset     Asset?     @relation(fields: [assetId], references: [id])
+  assetId   String?
+
+  @@index([userId, portfolioId])
+  @@index([externalId])
+  @@index([isin])
+  @@map("holdings")
+}
+
+// ============================================
+// ASSETS (Reference Data)
+// ============================================
+
+/// Reference data for securities
+model Asset {
+  id     String  @id @default(cuid())
+  isin   String? @unique @db.Text
+  symbol String? @db.Text
+  cusip  String? @db.Text
+  sedol  String? @db.Text
+
+  name     String
+  type     AssetType
+  currency String    @default("EUR")
+  sector   String?   @db.Text
+  industry String?   @db.Text
+
+  currentPrice   Decimal?  @db.Decimal
+  priceUpdatedAt DateTime?
+
+  holdings Holding[]
+
+  @@index([isin])
+  @@index([symbol])
+  @@map("assets")
+}
+
+enum AssetType {
+  EQUITY
+  ETF
+  MUTUAL_FUND
+  BOND
+  INDEX
+  CURRENCY
+  OTHER
+}
+
+// ============================================
+// SNAPSHOTS & SYNCHRONIZATION
+// ============================================
+
+/// Daily snapshot of user's total patrimony
+model DailySnapshot {
+  id     String @id @default(cuid())
+  userId String
+
+  totalAssets      Decimal  @db.Decimal
+  totalLiabilities Decimal? @db.Decimal
+  netWorth         Decimal  @db.Decimal
+  cash             Decimal  @db.Decimal
+  investments      Decimal  @db.Decimal
+  realestate       Decimal? @db.Decimal
+
+  bankAccounts     Decimal @db.Decimal
+  pea              Decimal @db.Decimal
+  cto              Decimal @db.Decimal
+  lifeInsurance    Decimal @db.Decimal
+  otherInvestments Decimal @db.Decimal
+
+  cashAllocation   Decimal @db.Decimal
+  equityAllocation Decimal @db.Decimal
+  bondAllocation   Decimal @db.Decimal
+  otherAllocation  Decimal @db.Decimal
+
+  dayGain          Decimal @db.Decimal
+  dayGainPercent   Decimal @db.Decimal
+  monthStartValue  Decimal @db.Decimal
+  monthGain        Decimal @db.Decimal
+  monthGainPercent Decimal @db.Decimal
+  yearStartValue   Decimal @db.Decimal
+  yearGain         Decimal @db.Decimal
+  yearGainPercent  Decimal @db.Decimal
+
+  snapshotDate DateTime @db.Date
+  createdAt    DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id])
+
+  @@unique([userId, snapshotDate])
+  @@index([userId, snapshotDate])
+  @@map("daily_snapshots")
+}
+
+/// Record of each sync operation
+model SyncJob {
+  id          String     @id @default(cuid())
+  userId      String?
+  type        SyncType
+  status      SyncStatus
+  startedAt   DateTime   @default(now())
+  completedAt DateTime?
+
+  accountsSynced     Int @default(0)
+  transactionsSynced Int @default(0)
+  holdingsSynced     Int @default(0)
+
+  errorMessage String? @db.Text
+  stackTrace   String? @db.Text
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user User? @relation(fields: [userId], references: [id])
+
+  @@index([userId, startedAt])
+  @@index([status])
+  @@map("sync_jobs")
+}
+
+enum SyncType {
+  BANK_ACCOUNTS
+  INVESTMENTS
+  ALL
+  SNAPSHOT
+  PRICE_UPDATE
+}
+
+enum SyncStatus {
+  PENDING
+  RUNNING
+  COMPLETED
+  FAILED
+  PARTIAL
+}

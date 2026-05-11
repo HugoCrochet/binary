@@ -1,0 +1,334 @@
+// ============================================
+// Enable Banking OAuth Flow
+// ============================================
+// Handles the complete OAuth flow for PSD2 connections
+
+import { EnableBankingClient } from './api';
+import { prisma } from '../../db/client';
+import { encrypt, decrypt } from '../../encryption';
+import { generateOAuthState, storeOAuthState } from './api';
+
+// ============================================
+// OAuth Flow Steps
+// ============================================
+
+/**
+ * Step 1: Initialize OAuth flow
+ * Create connection record and get authorization URL
+ */
+export async function initOAuthFlow(
+  userId: string,
+  institutionId: string,
+  accountId?: string
+) {
+  // Get institution config
+  const institution = await prisma.institution.findUnique({
+    where: { id: institutionId },
+  });
+
+  if (!institution) {
+    throw new Error(`Institution not found: ${institutionId}`);
+  }
+
+  // Create connection record
+  const connection = await prisma.connection.create({
+    data: {
+      userId,
+      institutionId,
+      status: 'PENDING',
+      accessToken: '', // Will be populated after OAuth
+      config: {
+        institutionConfig: institution.config,
+      },
+    },
+  });
+
+  // Initialize Enable Banking client
+  const client = new EnableBankingClient({
+    apiKey: institution.oauthClientId || '',
+    apiSecret: institution.oauthSecret || '',
+    baseUrl: institution.oauthAuthUrl || 'https://api.enablebanking.com/v1',
+    redirectUri: process.env.ENABLE_BANKING_REDIRECT_URI || '',
+  });
+
+  // Generate state for CSRF protection
+  const state = generateOAuthState();
+
+  // Store state with connection
+  await prisma.connection.update({
+    where: { id: connection.id },
+    data: {
+      config: {
+        ...connection.config,
+        oauthState: state,
+      },
+    },
+  });
+
+  // Create connection in Enable Banking
+  const enableResponse = await client.createConnection(
+    userId,
+    institutionId,
+    accountId
+  );
+
+  // Update connection with Enable Banking details
+  await prisma.connection.update({
+    where: { id: connection.id },
+    data: {
+      config: {
+        ...connection.config,
+        enableConnectionId: enableResponse.connectionId,
+        consentId: enableResponse.consentId,
+      },
+      nextSyncAt: new Date(Date.now() + 24 * 60 * 60 * 1000), // Sync in 24h
+    },
+  });
+
+  return {
+    connectionId: connection.id,
+    authorizationUrl: enableResponse.authorizationUrl,
+    state: enableResponse.consentId, // Use consentId as state for simplicity
+  };
+}
+
+/**
+ * Step 2: Handle OAuth callback
+ * Exchange code for token and fetch accounts
+ */
+export async function handleOAuthCallback(
+  connectionId: string,
+  code: string,
+  state: string
+) {
+  // Find connection
+  const connection = await prisma.connection.findUnique({
+    where: { id: connectionId },
+    include: { institution: true },
+  });
+
+  if (!connection) {
+    throw new Error(`Connection not found: ${connectionId}`);
+  }
+
+  if (connection.status !== 'PENDING') {
+    throw new Error(`Connection already processed: ${connection.status}`);
+  }
+
+  // Verify state (in production, compare with stored state)
+  if (state !== connection.config?.consentId) {
+    throw new Error('Invalid OAuth state');
+  }
+
+  // Initialize client
+  const client = new EnableBankingClient({
+    apiKey: connection.institution.oauthClientId || '',
+    apiSecret: connection.institution.oauthSecret || '',
+    baseUrl: connection.institution.oauthAuthUrl || '',
+    redirectUri: process.env.ENABLE_BANKING_REDIRECT_URI || '',
+  });
+
+  try {
+    // Exchange code for token
+    const tokenResponse = await client.exchangeCodeForToken(code);
+
+    // Store encrypted tokens
+    await prisma.connection.update({
+      where: { id: connectionId },
+      data: {
+        status: 'CONNECTED',
+        accessToken: encrypt(tokenResponse.accessToken),
+        refreshToken: tokenResponse.refreshToken
+          ? encrypt(tokenResponse.refreshToken)
+          : null,
+        expiresAt: new Date(Date.now() + tokenResponse.expiresIn * 1000),
+        lastSyncAt: null,
+      },
+    });
+
+    // Fetch accounts
+    const accountsResponse = await client.getAccounts(tokenResponse.accessToken);
+
+    // Process accounts (create or update)
+    for (const account of accountsResponse.accounts) {
+      await prisma.account.upsert({
+        where: {
+          externalId_institutionId: {
+            externalId: account.id,
+            institutionId: connection.institutionId,
+          },
+        },
+        create: {
+          connectionId: connection.id,
+          institutionId: connection.institutionId,
+          userId: connection.userId,
+          externalId: account.id,
+          name: account.name || account.displayName,
+          type: mapAccountType(account.type),
+          currency: account.currency,
+          balance: account.cashBalance,
+          availableBalance: account.availableBalance,
+          IBAN: account.iban,
+          BIC: account.bban, // BIC is usually separate, mapping BBAN for now
+        },
+        update: {
+          name: account.name || account.displayName,
+          balance: account.cashBalance,
+          availableBalance: account.availableBalance,
+          closedAt: null,
+        },
+      });
+    }
+
+    return { success: true, accounts: accountsResponse.accounts.length };
+
+  } catch (error) {
+    await prisma.connection.update({
+      where: { id: connectionId },
+      data: {
+        status: 'ERROR',
+        error: error instanceof Error ? error.message : 'Unknown error',
+        errorAt: new Date(),
+      },
+    });
+    throw error;
+  }
+}
+
+/**
+ * Step 3: Refresh token when expired
+ */
+export async function refreshAccessToken(connectionId: string) {
+  const connection = await prisma.connection.findUnique({
+    where: { id: connectionId },
+    include: { institution: true },
+  });
+
+  if (!connection || !connection.refreshToken) {
+    throw new Error('No refresh token available');
+  }
+
+  if (connection.status === 'DISCONNECTED') {
+    throw new Error('Connection was disconnected');
+  }
+
+  // Initialize client
+  const client = new EnableBankingClient({
+    apiKey: connection.institution.oauthClientId || '',
+    apiSecret: connection.institution.oauthSecret || '',
+    baseUrl: connection.institution.oauthAuthUrl || '',
+    redirectUri: process.env.ENABLE_BANKING_REDIRECT_URI || '',
+  });
+
+  try {
+    const tokenResponse = await client.refreshAccessToken(
+      decrypt(connection.refreshToken)
+    );
+
+    // Update connection
+    await prisma.connection.update({
+      where: { id: connectionId },
+      data: {
+        accessToken: encrypt(tokenResponse.accessToken),
+        refreshToken: tokenResponse.refreshToken
+          ? encrypt(tokenResponse.refreshToken)
+          : connection.refreshToken,
+        expiresAt: new Date(Date.now() + tokenResponse.expiresIn * 1000),
+        status: 'CONNECTED',
+      },
+    });
+
+    return { success: true };
+
+  } catch (error) {
+    // If refresh fails, mark as expired
+    await prisma.connection.update({
+      where: { id: connectionId },
+      data: {
+        status: 'EXPIRED',
+      },
+    });
+    throw error;
+  }
+}
+
+/**
+ * Step 4: Disconnect connection
+ */
+export async function disconnectConnection(connectionId: string) {
+  const connection = await prisma.connection.findUnique({
+    where: { id: connectionId },
+    include: { institution: true },
+  });
+
+  if (!connection) {
+    throw new Error(`Connection not found: ${connectionId}`);
+  }
+
+  // Revoke consent if we have one
+  if (connection.config?.consentId && connection.institution.oauthClientId) {
+    const client = new EnableBankingClient({
+      apiKey: connection.institution.oauthClientId,
+      apiSecret: connection.institution.oauthSecret || '',
+      baseUrl: connection.institution.oauthAuthUrl || '',
+      redirectUri: process.env.ENABLE_BANKING_REDIRECT_URI || '',
+    });
+
+    try {
+      await client.revokeConsent(connection.config.consentId);
+    } catch (error) {
+      console.warn('Failed to revoke consent:', error);
+      // Continue with disconnect even if consent revocation fails
+    }
+  }
+
+  // Mark connection as disconnected
+  await prisma.connection.update({
+    where: { id: connectionId },
+    data: {
+      status: 'DISCONNECTED',
+      accessToken: '',
+      refreshToken: null,
+      expiresAt: null,
+    },
+  });
+
+  // Mark accounts as potentially closed
+  await prisma.account.updateMany({
+    where: { connectionId },
+    data: {
+      closedAt: new Date(),
+    },
+  });
+
+  return { success: true };
+}
+
+// ============================================
+// Helper Functions
+// ============================================
+
+/**
+ * Map Enable Banking account type to internal account type
+ */
+function mapAccountType(externalType: string): string {
+  const typeMap: Record<string, string> = {
+    'checking': 'CHECKING',
+    'savings': 'SAVINGS',
+    'card': 'CREDIT_CARD',
+    'credit': 'LOAN',
+    'loan': 'LOAN',
+    'deposit': 'SAVINGS',
+    'investment': 'OTHER',
+    'trading': 'CTO',
+    'pea': 'PEA',
+  };
+
+  const lowerType = externalType.toLowerCase();
+  for (const key in typeMap) {
+    if (lowerType.includes(key)) {
+      return typeMap[key];
+    }
+  }
+  return 'OTHER';
+}
