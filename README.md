@@ -4,8 +4,6 @@ Binary est un dashboard financier personnel local-first. Le projet vise un outil
 simple pour suivre ses finances quotidiennes, ses investissements, ses emprunts
 et l'évolution de son patrimoine à partir d'imports CSV manuels.
 
-## État actuel
-
 L'application est aujourd'hui un prototype Next.js avec des données mockées.
 Elle donne une première forme aux grands espaces du produit :
 
@@ -15,10 +13,6 @@ Elle donne une première forme aux grands espaces du produit :
 - une page comptes pour visualiser les comptes et transactions récentes ;
 - une page investissements pour suivre les portefeuilles, positions et
   allocations.
-
-Le prochain vrai chantier consiste à définir le modèle de données, choisir un
-stockage local, puis brancher un premier import CSV avec revue humaine avant
-validation.
 
 ## Documentation
 
