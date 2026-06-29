@@ -56,6 +56,7 @@ export interface BudgetState {
 // Initial State
 // ============================================
 const generateId = () => Math.random().toString(36).substring(2, 9);
+const INITIAL_DATE = '2026-06-01T00:00:00.000Z';
 
 const INITIAL_INCOME_CATEGORIES: Category[] = [
   {
@@ -64,7 +65,7 @@ const INITIAL_INCOME_CATEGORIES: Category[] = [
     type: 'INCOME',
     amount: 3800,
     items: [
-      { id: 'txn-1', categoryId: 'cat-income-1', name: 'Salaire net', amount: 3800, date: new Date().toISOString(), type: 'INCOME' },
+      { id: 'txn-1', categoryId: 'cat-income-1', name: 'Salaire net', amount: 3800, date: INITIAL_DATE, type: 'INCOME' },
     ],
     icon: 'salary',
   },
@@ -77,7 +78,7 @@ const INITIAL_INVESTMENT_CATEGORIES: Category[] = [
     type: 'INVESTMENT',
     amount: 500,
     items: [
-      { id: 'txn-inv-1', categoryId: 'cat-inv-1', name: 'Investissement mensuel', amount: 500, date: new Date().toISOString(), type: 'INVESTMENT' },
+      { id: 'txn-inv-1', categoryId: 'cat-inv-1', name: 'Investissement mensuel', amount: 500, date: INITIAL_DATE, type: 'INVESTMENT' },
     ],
     icon: 'pea',
   },
@@ -87,7 +88,7 @@ const INITIAL_INVESTMENT_CATEGORIES: Category[] = [
     type: 'INVESTMENT',
     amount: 200,
     items: [
-      { id: 'txn-inv-2', categoryId: 'cat-inv-2', name: 'Épargne liquide', amount: 200, date: new Date().toISOString(), type: 'INVESTMENT' },
+      { id: 'txn-inv-2', categoryId: 'cat-inv-2', name: 'Épargne liquide', amount: 200, date: INITIAL_DATE, type: 'INVESTMENT' },
     ],
     icon: 'savings',
   },
@@ -100,9 +101,9 @@ const INITIAL_EXPENSE_CATEGORIES: Category[] = [
     type: 'EXPENSE',
     amount: 1200,
     items: [
-      { id: 'txn-exp-1', categoryId: 'cat-exp-1', name: 'Loyer', amount: 950, date: new Date().toISOString(), type: 'EXPENSE' },
-      { id: 'txn-exp-2', categoryId: 'cat-exp-1', name: 'Charges', amount: 150, date: new Date().toISOString(), type: 'EXPENSE' },
-      { id: 'txn-exp-3', categoryId: 'cat-exp-1', name: 'Électricité', amount: 100, date: new Date().toISOString(), type: 'EXPENSE' },
+      { id: 'txn-exp-1', categoryId: 'cat-exp-1', name: 'Loyer', amount: 950, date: INITIAL_DATE, type: 'EXPENSE' },
+      { id: 'txn-exp-2', categoryId: 'cat-exp-1', name: 'Charges', amount: 150, date: INITIAL_DATE, type: 'EXPENSE' },
+      { id: 'txn-exp-3', categoryId: 'cat-exp-1', name: 'Électricité', amount: 100, date: INITIAL_DATE, type: 'EXPENSE' },
     ],
     icon: 'housing',
   },
@@ -112,9 +113,9 @@ const INITIAL_EXPENSE_CATEGORIES: Category[] = [
     type: 'EXPENSE',
     amount: 600,
     items: [
-      { id: 'txn-exp-4', categoryId: 'cat-exp-2', name: 'Courses', amount: 350, date: new Date().toISOString(), type: 'EXPENSE' },
-      { id: 'txn-exp-5', categoryId: 'cat-exp-2', name: 'Restaurants', amount: 100, date: new Date().toISOString(), type: 'EXPENSE' },
-      { id: 'txn-exp-6', categoryId: 'cat-exp-2', name: 'Snacks', amount: 50, date: new Date().toISOString(), type: 'EXPENSE' },
+      { id: 'txn-exp-4', categoryId: 'cat-exp-2', name: 'Courses', amount: 350, date: INITIAL_DATE, type: 'EXPENSE' },
+      { id: 'txn-exp-5', categoryId: 'cat-exp-2', name: 'Restaurants', amount: 100, date: INITIAL_DATE, type: 'EXPENSE' },
+      { id: 'txn-exp-6', categoryId: 'cat-exp-2', name: 'Snacks', amount: 50, date: INITIAL_DATE, type: 'EXPENSE' },
     ],
     icon: 'food',
   },
@@ -124,10 +125,10 @@ const INITIAL_EXPENSE_CATEGORIES: Category[] = [
     type: 'EXPENSE',
     amount: 150,
     items: [
-      { id: 'txn-exp-7', categoryId: 'cat-exp-3', name: 'Internet', amount: 45, date: new Date().toISOString(), type: 'EXPENSE' },
-      { id: 'txn-exp-8', categoryId: 'cat-exp-3', name: 'Mobile', amount: 32, date: new Date().toISOString(), type: 'EXPENSE' },
-      { id: 'txn-exp-9', categoryId: 'cat-exp-3', name: 'Netflix', amount: 18, date: new Date().toISOString(), type: 'EXPENSE' },
-      { id: 'txn-exp-10', categoryId: 'cat-exp-3', name: 'Gym', amount: 55, date: new Date().toISOString(), type: 'EXPENSE' },
+      { id: 'txn-exp-7', categoryId: 'cat-exp-3', name: 'Internet', amount: 45, date: INITIAL_DATE, type: 'EXPENSE' },
+      { id: 'txn-exp-8', categoryId: 'cat-exp-3', name: 'Mobile', amount: 32, date: INITIAL_DATE, type: 'EXPENSE' },
+      { id: 'txn-exp-9', categoryId: 'cat-exp-3', name: 'Netflix', amount: 18, date: INITIAL_DATE, type: 'EXPENSE' },
+      { id: 'txn-exp-10', categoryId: 'cat-exp-3', name: 'Gym', amount: 55, date: INITIAL_DATE, type: 'EXPENSE' },
     ],
     icon: 'subscriptions',
   },
@@ -137,8 +138,8 @@ const INITIAL_EXPENSE_CATEGORIES: Category[] = [
     type: 'EXPENSE',
     amount: 100,
     items: [
-      { id: 'txn-exp-11', categoryId: 'cat-exp-4', name: 'Essence', amount: 60, date: new Date().toISOString(), type: 'EXPENSE' },
-      { id: 'txn-exp-12', categoryId: 'cat-exp-4', name: 'Transports', amount: 40, date: new Date().toISOString(), type: 'EXPENSE' },
+      { id: 'txn-exp-11', categoryId: 'cat-exp-4', name: 'Essence', amount: 60, date: INITIAL_DATE, type: 'EXPENSE' },
+      { id: 'txn-exp-12', categoryId: 'cat-exp-4', name: 'Transports', amount: 40, date: INITIAL_DATE, type: 'EXPENSE' },
     ],
     icon: 'transport',
   },
@@ -148,9 +149,9 @@ const INITIAL_EXPENSE_CATEGORIES: Category[] = [
     type: 'EXPENSE',
     amount: 150,
     items: [
-      { id: 'txn-exp-13', categoryId: 'cat-exp-5', name: 'Cinéma', amount: 40, date: new Date().toISOString(), type: 'EXPENSE' },
-      { id: 'txn-exp-14', categoryId: 'cat-exp-5', name: 'Culture', amount: 60, date: new Date().toISOString(), type: 'EXPENSE' },
-      { id: 'txn-exp-15', categoryId: 'cat-exp-5', name: 'Vacances', amount: 50, date: new Date().toISOString(), type: 'EXPENSE' },
+      { id: 'txn-exp-13', categoryId: 'cat-exp-5', name: 'Cinéma', amount: 40, date: INITIAL_DATE, type: 'EXPENSE' },
+      { id: 'txn-exp-14', categoryId: 'cat-exp-5', name: 'Culture', amount: 60, date: INITIAL_DATE, type: 'EXPENSE' },
+      { id: 'txn-exp-15', categoryId: 'cat-exp-5', name: 'Vacances', amount: 50, date: INITIAL_DATE, type: 'EXPENSE' },
     ],
     icon: 'leisure',
   },

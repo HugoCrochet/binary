@@ -1,109 +1,50 @@
-# Finance Aggregator
+# Binary
 
-Application personnelle pour agréger vos comptes bancaires et investissements en un seul endroit.
+Binary est un dashboard financier personnel local-first. Le projet vise un outil
+simple pour suivre ses finances quotidiennes, ses investissements, ses emprunts
+et l'évolution de son patrimoine à partir d'imports CSV manuels.
 
-## Fonctionnalités (MVP)
+## État actuel
 
-- **Tableau de bord** : Vue d'ensemble de votre patrimoine, performance, allocation par classe d'actif
-- **Comptes bancaires** : Synchronisation automatique avec Banque Populaire, Revolut, et autres via Open Banking PSD2
-- **Investissements** : Portfolio PEA, CTO, Assurance Vie
-- **Historique** : Snapshots quotidiens pour suivre l'évolution de votre patrimoine
-- **Synchronisation** : Toutes les 6 heures automatiquement
+L'application est aujourd'hui un prototype Next.js avec des données mockées.
+Elle donne une première forme aux grands espaces du produit :
 
-## Stack Technique
+- un dashboard global pour le patrimoine, l'allocation et le cashflow ;
+- une page budget pour suivre revenus, dépenses, investissements mensuels et
+  taux d'épargne ;
+- une page comptes pour visualiser les comptes et transactions récentes ;
+- une page investissements pour suivre les portefeuilles, positions et
+  allocations.
 
-- **Frontend** : Next.js (App Router), TypeScript, Tailwind CSS
-- **Backend** : Next.js API Routes
-- **Database** : PostgreSQL avec Prisma ORM
-- **Auth** : JWT-based authentication (single user mode)
-- **Sync** : Enable Banking (Open Banking PSD2), Bourse Direct scraper (Playwright)
+Le prochain vrai chantier consiste à définir le modèle de données, choisir un
+stockage local, puis brancher un premier import CSV avec revue humaine avant
+validation.
 
-## Développement Local
+## Documentation
+
+La documentation détaillée vit dans `doc/` et doit être maintenue au fil des
+décisions.
+
+- [Développement local](doc/development.md) : stack, commandes et notes Next.js.
+- [Frontend](doc/frontend.md) : pages existantes, choix UI et points d'attention.
+- [Process CSV](doc/csv-import.md) : workflow cible d'import et validation.
+- [Modèle de données](doc/data-model.md) : premières entités à stabiliser.
+- [Sécurité et hébergement](doc/security.md) : position local-first et sujets à
+  trancher avant toute version hébergée.
+- [TODO projet](Todo.md) : ordre de travail et chantiers ouverts.
+
+## Lancement rapide
 
 ```bash
-# Installation
 npm install
-
-# Configuration
-cp .env.example .env.local
-# Éditer .env.local avec vos paramètres
-
-# Base de données (Docker)
-docker-compose up -d
-
-# Migrations Prisma
-npx prisma generate
-npx prisma migrate dev
-
-# Lancement
 npm run dev
 ```
 
-## Architecture
+Puis ouvrir `http://localhost:3000`.
 
-```
-Sources financières
-        ↓
-Connecteurs (Enable Banking + Bourse Direct)
-        ↓
-Normalisation
-        ↓
-PostgreSQL
-        ↓
-API backend (Next.js API routes)
-        ↓
-Dashboard Next.js
-```
-
-## Structure du Projet
-
-```
-finance-aggregator/
-├── prisma/
-│   ├── schema.prisma      # Modèle Prisma
-│   └── migrations/        # Migrations DB
-├── src/
-│   ├── app/
-│   │   ├── api/           # API routes
-│   │   └── (pages)/       # Pages frontend
-│   ├── lib/
-│   │   ├── db/            # Prisma client
-│   │   ├── integrations/  # Connecteurs externes
-│   │   ├── normalizer/    # Normalisation des données
-│   │   └── utils/         # Utilitaires
-│   └── scripts/           # Jobs de sync
-├── docker/
-│   ├── Dockerfile
-│   └── docker-compose.yml
-├── .env.local             # Variables d'environnement
-└── package.json
-```
-
-## Configuration Enable Banking
-
-1. Créez un compte sur [Enable Banking](https://www.enablebanking.com/)
-2. Obtenez vos API credentials
-3. Configurez `ENABLE_BANKING_API_KEY` et `ENABLE_BANKING_API_SECRET` dans `.env.local`
-4. Définissez votre redirect URI : `http://localhost:3000/api/auth/enable-banking/callback`
-
-## Configuration Bourse Direct
-
-1. Ajoutez vos identifiants dans `.env.local` :
-   ```
-   BOURSE_DIRECT_USERNAME=votre-utilisateur
-   BOURSE_DIRECT_PASSWORD=votre-mot-de-passe
-   ```
-
-## Déploiement
+Commandes utiles :
 
 ```bash
-# Build
-docker-compose build
-
-# Lancement
-docker-compose up -d
+npm run typecheck
+npm run build
 ```
-
-## License
-
-MIT

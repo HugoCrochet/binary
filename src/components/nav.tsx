@@ -8,8 +8,6 @@ import {
   WalletIcon,
   PieChartIcon,
   ArrowRightLeftIcon,
-  PiggyBankIcon,
-  SettingsIcon,
 } from 'lucide-react';
 
 const NAV_ITEMS = [

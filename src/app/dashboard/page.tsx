@@ -4,7 +4,7 @@ import { TrendCard } from '@/components/ui/trend-card';
 import { AllocationChart } from '@/components/ui/allocation-chart';
 import { StackedAreaChart } from '@/components/ui/stacked-area-chart';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { ActivityIcon, WalletIcon, TrendingUpIcon, PiggyBankIcon } from 'lucide-react';
+import { ActivityIcon, WalletIcon, PiggyBankIcon } from 'lucide-react';
 import { formatCurrency } from '@/lib/utils';
 
 // Mock data for initial display - à remplacer par les données réelles
@@ -39,12 +39,12 @@ const mockCashflow = {
   totalExpense: 2850,
   netCashflow: 1350,
   byCategory: [
-    { name: 'income', label: 'Revenus', color: '#10b981' },
-    { name: 'housing', label: 'Logement', color: '#ef4444' },
-    { name: 'food', label: 'Alimentation', color: '#f97316' },
-    { name: 'transport', label: 'Transport', color: '#3b82f6' },
-    { name: 'leisure', label: 'Loisirs', color: '#8b5cf6' },
-    { name: 'other', label: 'Autres', color: '#6b7280' },
+    { name: 'income', label: 'Revenus', value: 4200, color: '#10b981' },
+    { name: 'housing', label: 'Logement', value: 1200, color: '#ef4444' },
+    { name: 'food', label: 'Alimentation', value: 600, color: '#f97316' },
+    { name: 'transport', label: 'Transport', value: 220, color: '#3b82f6' },
+    { name: 'leisure', label: 'Loisirs', value: 310, color: '#8b5cf6' },
+    { name: 'other', label: 'Autres', value: 520, color: '#6b7280' },
   ],
 };
 
@@ -70,11 +70,11 @@ export default function DashboardPage() {
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
           <h1 className="text-3xl font-bold tracking-tight text-gray-900">Cockpit</h1>
-          <p className="text-gray-500 mt-1">Votre patrimoine en temps réel</p>
+          <p className="text-gray-500 mt-1">Vue locale de vos finances personnelles</p>
         </div>
         <div className="flex items-center gap-3">
           <span className="inline-flex items-center rounded-full bg-emerald-50 px-3 py-1 text-xs font-medium text-emerald-700 ring-1 ring-inset ring-emerald-600/20">
-            Sync à jour
+            Données locales
           </span>
         </div>
       </div>
@@ -189,7 +189,7 @@ export default function DashboardPage() {
                   <div className="h-3 w-3 rounded-full" style={{ backgroundColor: cat.color }} />
                   <span className="text-sm font-medium text-gray-700 flex-1">{cat.label}</span>
                   <span className="text-sm text-gray-500">
-                    {Math.random() * 100 + 50 | 0} €
+                    {formatCurrency(cat.value, 'EUR', 0)}
                   </span>
                 </div>
               ))}

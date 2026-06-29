@@ -1,51 +1,32 @@
 {
-  "name": "finance-aggregator",
+  "name": "binary",
   "version": "0.1.0",
   "private": true,
   "scripts": {
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint",
-    "prisma:generate": "prisma generate",
-    "prisma:migrate": "prisma migrate dev",
-    "prisma:studio": "prisma studio",
-    "prisma:seed": "tsx src/scripts/seed.ts",
-    "sync": "tsx src/scripts/sync-all.ts"
+    "typecheck": "tsc --noEmit"
   },
   "dependencies": {
     "@nivo/sankey": "^0.99.0",
-    "@prisma/adapter-pg": "^7.8.0",
-    "@prisma/client": "^7.8.0",
-    "@radix-ui/react-slot": "^1.2.4",
     "@radix-ui/react-tabs": "^1.1.13",
     "@radix-ui/react-tooltip": "^1.2.8",
-    "bcryptjs": "^3.0.3",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
-    "date-fns": "^4.1.0",
-    "ioredis": "^5.10.1",
-    "jsonwebtoken": "^8.5.1",
     "lucide-react": "^1.14.0",
     "next": "16.2.6",
-    "pg": "^8.20.0",
-    "playwright": "^1.59.1",
-    "prisma": "^7.8.0",
     "react": "19.2.4",
     "react-dom": "19.2.4",
     "recharts": "^3.8.1",
     "tailwind-merge": "^3.6.0",
-    "zod": "^4.4.3",
     "zustand": "^5.0.13"
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4",
-    "@types/bcryptjs": "2.4.6",
-    "@types/jsonwebtoken": "^9.0.10",
     "@types/node": "20.19.40",
     "@types/react": "^19",
     "@types/react-dom": "^19",
-    "dotenv": "17.4.2",
     "tailwindcss": "^4",
     "typescript": "^5"
   }

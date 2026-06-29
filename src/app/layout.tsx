@@ -1,13 +1,10 @@
 import type { Metadata } from "next";
-import { Inter } from "next/font/google";
 import "./globals.css";
 import { Navbar } from "@/components/nav";
 
-const inter = Inter({ subsets: ["latin"] });
-
 export const metadata: Metadata = {
-  title: "Finance Aggregator",
-  description: "Personal finance dashboard",
+  title: "Binary",
+  description: "Dashboard financier personnel local",
 };
 
 export default function RootLayout({
@@ -17,7 +14,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="fr">
-      <body className={`${inter.className} h-full antialiased bg-slate-50`}>
+      <body className="h-full bg-slate-50 font-sans antialiased">
         <Navbar />
         <main className="container mx-auto px-4 py-6">
           {children}

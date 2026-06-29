@@ -1,5 +1,3 @@
-import Link from 'next/link';
-
 const mockAccounts = [
   {
     id: '1',
@@ -72,12 +70,12 @@ export default function AccountsPage() {
         <h1 className="text-3xl font-bold tracking-tight text-gray-900">
           Mes Comptes
         </h1>
-        <Link
-          href="/accounts/connect"
+        <button
+          type="button"
           className="inline-flex items-center rounded-md bg-indigo-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600"
         >
-          + Connecter un compte
-        </Link>
+          + Ajouter un compte
+        </button>
       </div>
 
       {/* Account Summary */}
@@ -103,8 +101,8 @@ export default function AccountsPage() {
           </dd>
         </div>
         <div className="overflow-hidden rounded-lg bg-white shadow p-5">
-          <dt className="text-sm font-medium text-gray-500">Dernière sync</dt>
-          <dd className="mt-1 text-lg font-semibold text-gray-900">Aujourd'hui</dd>
+          <dt className="text-sm font-medium text-gray-500">Dernier import</dt>
+          <dd className="mt-1 text-lg font-semibold text-gray-900">À configurer</dd>
         </div>
       </div>
 
@@ -124,9 +122,6 @@ export default function AccountsPage() {
               </th>
               <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
                 Solde
-              </th>
-              <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Actions
               </th>
             </tr>
           </thead>
@@ -161,14 +156,6 @@ export default function AccountsPage() {
                     account.balance
                   )}
                 </td>
-                <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                  <Link
-                    href={`/accounts/${account.id}`}
-                    className="text-indigo-600 hover:text-indigo-900"
-                  >
-                    Détails
-                  </Link>
-                </td>
               </tr>
             ))}
           </tbody>
@@ -182,7 +169,7 @@ export default function AccountsPage() {
             Transactions récentes
           </h3>
           <p className="mt-1 max-w-2xl text-sm text-gray-500">
-            Dernières opérations sur vos comptes connectés
+            Dernières opérations importées manuellement
           </p>
         </div>
         <div className="border-t border-gray-200">

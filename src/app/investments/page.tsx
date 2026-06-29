@@ -1,5 +1,3 @@
-import Link from 'next/link';
-
 const mockPortfolios = [
   {
     id: '1',
@@ -35,12 +33,12 @@ export default function InvestmentsPage() {
         <h1 className="text-3xl font-bold tracking-tight text-gray-900">
           Mes Investissements
         </h1>
-        <Link
-          href="/investments/connect"
+        <button
+          type="button"
           className="inline-flex items-center rounded-md bg-indigo-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600"
         >
-          + Connecter un portefeuille
-        </Link>
+          + Ajouter un portefeuille
+        </button>
       </div>
 
       {/* Portfolio Summary */}
@@ -89,12 +87,6 @@ export default function InvestmentsPage() {
                     {portfolio.type} - {formatCurrency(portfolio.currentValue)}
                   </p>
                 </div>
-                <Link
-                  href={`/investments/${portfolio.id}`}
-                  className="text-indigo-600 hover:text-indigo-900"
-                >
-                  Détails
-                </Link>
               </div>
             </div>
             <div className="border-t border-gray-200">
