@@ -116,7 +116,7 @@ export function CategoryCard({
             />
             <Button
               onClick={handleAddTransaction}
-              className="bg-gray-900 hover:bg-gray-800 text-white"
+              className="bg-indigo-600 text-white hover:bg-indigo-500"
               size="sm"
             >
               <PlusIcon className="h-4 w-4" />

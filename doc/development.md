@@ -71,6 +71,13 @@ Générer le client Prisma :
 npm run db:generate
 ```
 
+À la première tentative de connexion après la mise en place de l'auth locale,
+l'app crée le compte admin local si besoin :
+
+- pseudo : `mlg` ;
+- mot de passe temporaire : `1234` ;
+- changement de mot de passe obligatoire à la première connexion.
+
 Inspecter la base si besoin :
 
 ```bash
@@ -89,9 +96,12 @@ Après une modification du schéma Prisma :
 
 ```bash
 npx prisma validate
-npm run db:generate
 npm run db:migrate
+npm run db:generate
 ```
+
+Redémarrer ensuite `npm run dev` si le serveur tournait déjà. Le client Prisma
+généré et le cache Next peuvent sinon rester sur l'ancien schéma.
 
 Avant un commit :
 
@@ -112,6 +122,8 @@ métier régulières doivent passer par l'app, pas par Prisma Studio.
 - `backups/` contiendra les exports de sécurité.
 - Ces deux dossiers ne doivent jamais être commités.
 - `.env` est local et ne doit pas être commité.
+- Les sessions de connexion locales sont stockées dans SQLite et pilotées par
+  un cookie `httpOnly`.
 
 Voir aussi `doc/storage.md`.
 

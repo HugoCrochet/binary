@@ -55,7 +55,9 @@ pointe vers `data/binary.sqlite` à la racine du projet.
 
 Le schéma initial reste volontairement minimal :
 
-- `Profile` : profil local, même s'il n'y en a qu'un au départ ;
+- `Profile` : utilisateur/profil local, avec pseudo, rôle, mot de passe hashé
+  et indicateur de première connexion ;
+- `Session` : session locale liée à un profil ;
 - `EnabledModule` : modules activables par profil ;
 - `Account` : comptes courants, livrets, PEA, CTO, prêts ou enveloppes ;
 - `Category` : catégories de revenus, dépenses ou investissements ;
@@ -65,6 +67,11 @@ Le schéma initial reste volontairement minimal :
 
 Chaque table métier contient `profileId` dès maintenant. Les montants sont
 stockés en centimes (`amountCents`) pour éviter les erreurs d'arrondi.
+
+Le vocabulaire retenu est volontairement strict :
+
+- utilisateur/profil : la personne qui se connecte ;
+- compte financier : compte courant, livret, PEA, CTO, prêt ou autre enveloppe.
 
 Les statuts et types restent des `String` au départ : cela évite de figer trop
 tôt les catégories techniques du produit.

@@ -7,7 +7,12 @@ l'utilisateur et aucune synchronisation bancaire automatique n'est prévue.
 
 ## Tant que l'app reste locale
 
-- Pas d'authentification nécessaire.
+- Authentification locale simple dès maintenant, pour préparer l'app
+  multi-utilisateur sans exposer de service public.
+- Premier compte admin local : `mlg` / `1234`, avec changement de mot de passe
+  obligatoire à la première connexion.
+- Les mots de passe sont hashés côté serveur avec `crypto.scrypt`.
+- Les sessions sont stockées en SQLite et liées à un cookie `httpOnly`.
 - Pas d'API publique.
 - Pas d'envoi de CSV à un service externe.
 - Base SQLite locale personnelle, non commitée, gérée via Prisma.
@@ -21,7 +26,7 @@ l'utilisateur et aucune synchronisation bancaire automatique n'est prévue.
 
 Il faudra décider avant implémentation :
 
-- authentification ;
+- authentification de production ;
 - chiffrement au repos ;
 - séparation stricte des utilisateurs ;
 - gestion des sauvegardes ;
@@ -29,7 +34,8 @@ Il faudra décider avant implémentation :
 - modèle de menace minimal.
 
 Aucune version hébergée ne doit être ajoutée sans décision explicite sur ces
-points.
+points. L'auth locale actuelle sert au MVP local et ne doit pas être considérée
+comme une réponse complète pour une plateforme publique.
 
 ## Données à ne jamais commiter
 
