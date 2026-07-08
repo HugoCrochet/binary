@@ -120,16 +120,24 @@ The current product direction is intentionally simple:
 ### 2.3 Discussion Before Implementation
 
 When the user starts discussing a feature, architecture choice, or product
-direction, do not implement immediately. Clarify the goal, ask useful questions
-and compare options until a solution is explicitly selected.
+direction, do not implement immediately. Treat the exchange as a design
+discussion, not as permission to edit files.
+
+Discuss until there is explicit agreement:
+
+- clarify the goal and constraints;
+- ask useful questions, including questions that expose missing details or
+  hidden tradeoffs;
+- compare viable options when there are several;
+- wait for the user to select or confirm the solution before implementing.
 
 Once the solution is selected:
 
 - implement directly if the change is small and obvious;
 - propose and follow a short plan if the implementation is larger or risky.
 
-If the user asks for a concrete fix or cleanup, proceed without unnecessary
-process.
+Only proceed without this discussion loop when the user explicitly asks for a
+concrete implementation, fix, cleanup, command, or file edit.
 
 ---
 

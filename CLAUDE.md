@@ -94,11 +94,22 @@ For multi-step tasks, state a brief plan:
 ## 6. Discussion Before Implementation
 
 When the conversation is about a possible feature, architecture choice or
-product direction, do not implement immediately. Discuss the goal, constraints
-and options until a solution is selected.
+product direction, do not implement immediately. Treat the exchange as a design
+discussion, not as permission to edit files.
+
+Discuss until there is explicit agreement:
+
+- clarify the goal and constraints;
+- ask useful questions, including questions that expose missing details or
+  hidden tradeoffs;
+- compare viable options when there are several;
+- wait for the user to select or confirm the solution before implementing.
 
 Once the solution is selected, implement it directly if it is small, or use a
 short plan if the implementation is larger.
+
+Only proceed without this discussion loop when the user explicitly asks for a
+concrete implementation, fix, cleanup, command, or file edit.
 
 Maintained documentation:
 
