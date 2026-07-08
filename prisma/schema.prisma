@@ -1,0 +1,162 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "sqlite"
+}
+
+model Profile {
+  id        String   @id @default(cuid())
+  name      String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @default(now()) @updatedAt
+
+  accounts        Account[]
+  categories      Category[]
+  enabledModules  EnabledModule[]
+  importBatches   ImportBatch[]
+  rawTransactions RawTransaction[]
+  transactions    Transaction[]
+
+  @@map("profiles")
+}
+
+model EnabledModule {
+  id        String   @id @default(cuid())
+  profileId String
+  moduleKey String
+  enabled   Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @default(now()) @updatedAt
+
+  profile Profile @relation(fields: [profileId], references: [id], onDelete: Cascade)
+
+  @@unique([profileId, moduleKey])
+  @@index([profileId])
+  @@map("enabled_modules")
+}
+
+model Account {
+  id          String   @id @default(cuid())
+  profileId   String
+  name        String
+  type        String
+  institution String?
+  currency    String   @default("EUR")
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @default(now()) @updatedAt
+
+  profile         Profile          @relation(fields: [profileId], references: [id], onDelete: Cascade)
+  importBatches   ImportBatch[]
+  rawTransactions RawTransaction[]
+  transactions    Transaction[]
+
+  @@index([profileId])
+  @@index([profileId, type])
+  @@map("accounts")
+}
+
+model Category {
+  id        String   @id @default(cuid())
+  profileId String
+  name      String
+  type      String
+  parentId  String?
+  color     String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @default(now()) @updatedAt
+
+  profile      Profile       @relation(fields: [profileId], references: [id], onDelete: Cascade)
+  parent       Category?     @relation("CategoryHierarchy", fields: [parentId], references: [id], onDelete: SetNull)
+  children     Category[]    @relation("CategoryHierarchy")
+  transactions Transaction[]
+
+  @@unique([profileId, name, type])
+  @@index([profileId])
+  @@index([parentId])
+  @@map("categories")
+}
+
+model ImportBatch {
+  id               String    @id @default(cuid())
+  profileId        String
+  accountId        String
+  source           String
+  originalFileName String
+  fileHash         String?
+  periodStart      DateTime?
+  periodEnd        DateTime?
+  status           String    @default("pending")
+  createdAt        DateTime  @default(now())
+  updatedAt        DateTime  @default(now()) @updatedAt
+
+  profile         Profile          @relation(fields: [profileId], references: [id], onDelete: Cascade)
+  account         Account          @relation(fields: [accountId], references: [id], onDelete: Cascade)
+  rawTransactions RawTransaction[]
+
+  @@index([profileId])
+  @@index([accountId])
+  @@index([fileHash])
+  @@map("import_batches")
+}
+
+model RawTransaction {
+  id              String    @id @default(cuid())
+  profileId       String
+  importBatchId   String
+  accountId       String
+  rawDate         String?
+  parsedDate      DateTime?
+  rawLabel        String
+  normalizedLabel String?
+  rawAmount       String
+  amountCents     Int?
+  currency        String    @default("EUR")
+  status          String    @default("pending")
+  dedupeKey       String?
+  rawPayload      String?
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @default(now()) @updatedAt
+
+  profile     Profile      @relation(fields: [profileId], references: [id], onDelete: Cascade)
+  importBatch ImportBatch  @relation(fields: [importBatchId], references: [id], onDelete: Cascade)
+  account     Account      @relation(fields: [accountId], references: [id], onDelete: Cascade)
+  transaction Transaction?
+
+  @@index([profileId])
+  @@index([importBatchId])
+  @@index([accountId])
+  @@index([dedupeKey])
+  @@map("raw_transactions")
+}
+
+model Transaction {
+  id               String   @id @default(cuid())
+  profileId        String
+  accountId        String
+  rawTransactionId String?  @unique
+  categoryId       String?
+  date             DateTime
+  label            String
+  originalLabel    String?
+  amountCents      Int
+  currency         String   @default("EUR")
+  type             String
+  note             String?
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @default(now()) @updatedAt
+
+  profile        Profile         @relation(fields: [profileId], references: [id], onDelete: Cascade)
+  account        Account         @relation(fields: [accountId], references: [id], onDelete: Cascade)
+  rawTransaction RawTransaction? @relation(fields: [rawTransactionId], references: [id], onDelete: SetNull)
+  category       Category?       @relation(fields: [categoryId], references: [id], onDelete: SetNull)
+
+  @@index([profileId])
+  @@index([accountId])
+  @@index([categoryId])
+  @@index([date])
+  @@map("transactions")
+}

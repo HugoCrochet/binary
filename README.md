@@ -23,6 +23,7 @@ décisions.
 - [Frontend](doc/frontend.md) : pages existantes, choix UI et points d'attention.
 - [Process CSV](doc/csv-import.md) : workflow cible d'import et validation.
 - [Modèle de données](doc/data-model.md) : premières entités à stabiliser.
+- [Stockage local](doc/storage.md) : décision Prisma + SQLite, backups et points ouverts.
 - [Sécurité et hébergement](doc/security.md) : position local-first et sujets à
   trancher avant toute version hébergée.
 - [TODO projet](Todo.md) : ordre de travail et chantiers ouverts.

@@ -33,6 +33,15 @@ yarn-error.log*
 # env files (can opt-in for committing if needed)
 .env*
 
+# local data
+/data/
+/backups/
+*.sqlite
+*.sqlite-*
+
+# generated prisma client
+/src/generated/prisma/
+
 # vercel
 .vercel
 

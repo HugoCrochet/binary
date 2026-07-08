@@ -49,29 +49,30 @@ brut et des transactions prêtes à être revues.
 
 ---
 
-## 3. Choisir le stockage local
+## 3. Préciser l'architecture SQLite locale
 
-**Objectif** : remplacer la simple persistance navigateur par un stockage local
-fiable pour les imports, corrections, historiques et données validées.
+**Objectif** : transformer la décision SQLite locale en architecture concrète,
+sans encore figer un schéma trop détaillé.
 
-**Options à comparer** :
-- Petite base de données locale.
-- Fichiers JSON / CSV écrits localement.
-- IndexedDB si on reste sur une app web pure.
-- SQLite si on évolue vers une app locale plus structurée.
+**Décision retenue** :
+- Prisma + SQLite local comme source de vérité du MVP.
+- Base personnelle à chaque utilisateur, jamais commitée.
+- Exports JSON / CSV comme backup lisible.
+- Schéma à penser pour une migration future vers PostgreSQL si le projet devient
+  une plateforme hébergée.
 
-**Critères de décision** :
-- simplicité de mise en place ;
-- facilité de sauvegarde et de migration ;
-- lisibilité des données en cas de debug ;
-- compatibilité avec une app locale web ou desktop plus tard ;
-- risque de perdre ou corrompre les données.
+**Questions restantes** :
+- Où stocker le fichier SQLite local ?
+- Comment organiser les commandes et migrations Prisma ?
+- Quand créer des backups et combien en conserver ?
+- Comment restaurer proprement un backup si la base est cassée ?
 
 **Plan pratique** :
-1. Comparer les options sur un petit exemple concret.
-2. Choisir une solution pour le prototype.
-3. Définir comment sauvegarder/exporter les données.
-4. Documenter la décision dans `doc/data-model.md` ou un fichier dédié si besoin.
+1. Réintroduire Prisma proprement avec SQLite.
+2. Décider l'emplacement local de la base et l'ajouter aux fichiers ignorés.
+3. Définir une stratégie de migration minimale avec backup préalable.
+4. Définir une stratégie de backup/restauration.
+5. Documenter les décisions dans `doc/storage.md`.
 
 ---
 
@@ -102,6 +103,12 @@ importées, puis laisser l'utilisateur valider ou corriger dans une page claire.
 - Direction produit initiale clarifiée : dashboard financier personnel
   local-first, imports CSV manuels, revue humaine avant validation, pas de
   synchronisation bancaire automatique.
+- Décision de stockage retenue : Prisma + SQLite local comme source de vérité
+  du MVP, avec exports JSON / CSV pour backup et migration future à garder en
+  tête.
+- Principe de modularité retenu : les onglets/fonctionnalités doivent pouvoir
+  être activés selon les besoins de l'utilisateur, notamment immobilier,
+  prêts, investissements ou livrets.
 - Nettoyage initial du repo effectué : retrait des briques Docker, Prisma,
   API routes, auth serveur, synchronisation automatique et intégrations
   bancaires devenues hors-scope.
